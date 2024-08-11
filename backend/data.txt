@@ -1,0 +1,49 @@
+FAQ Section
+
+1. General Inquiries
+- What are your business hours?
+    - Our customer support team is available Monday to Friday, 9 AM to 5 PM.
+- How can I contact your customer support?
+    - You can reach us by phone at +1(123)-456-7890, email at company_email@gmail.com, or through our live chat on our website.
+- Where is your company located?
+    - Our headquarters is located in NYC, NY.
+- What products or services do you offer?
+    - Tech solution and devices.
+
+2. Orders and Shipping
+- How can I track my order?
+    - Once your order is shipped, you will receive a tracking number via email. You can use this number to track your order on the shipping carrier's website.   
+- What are your shipping costs?
+    - Shipping costs vary depending on the order size, shipping address, and shipping method. You can calculate the shipping cost during the checkout process.
+- What are your shipping options?
+    - We offer standard shipping and overnight shipping.
+- What is your return policy?
+    - The conditions must be unused.
+- How long does it take to process a refund?
+    - Refunds are typically processed within 7 business days of receiving the returned item.
+
+3. Payments and Billing
+- What payment methods do you accept?
+    - We accept credit cards, PayPal, Visa, and Master Card.
+- Is my payment information secure?
+    - Yes, we use industry-standard encryption to protect your payment information.
+- How do I update my billing information?
+    - You can update your billing information by logging into your account on our website and going to the account settings section.
+
+4. Product Information
+- How do I use computer?
+    - [Provide basic instructions or refer to the product manual].
+- What is the warranty on computer?
+    - The warranty for computer is 2 years. For more details, please refer to the warranty information included with your purchase.
+- Where can I find product specifications?
+    - Product specifications can be found on the product detail page on our website.
+
+5. Account and Login
+- How do I create an account?
+    - To create an account, visit our website and click on the "Create Account" button.
+- I forgot my password. How can I reset it?
+    - Click on the "Forgot Password" link on the login page and follow the instructions.
+- How do I update my account information?
+    - Log in to your account and go to the account settings section to update your information.
+
+
