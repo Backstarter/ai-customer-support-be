@@ -17,10 +17,14 @@ load_dotenv()
 # openai
 openai_api_key = os.getenv("OPENAI_API_KEY")
 client = openai.OpenAI()
-embeddings_model = OpenAIEmbeddings(api_key=openai_api_key, model="text-embedding-3-small")
+embeddings_model = OpenAIEmbeddings(
+    api_key=openai_api_key,
+    model="text-embedding-3-small")
 
 # firebase
-firebase_credentials = json.loads(os.getenv("FIREBASE_CREDENTIALS").replace("\\n", "\n"))
+firebase_credentials = json.loads(
+    os.getenv("FIREBASE_CREDENTIALS").replace(
+        "\\n", "\n"))
 cred = credentials.Certificate(firebase_credentials)
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://our-project-id.firebaseio.com/'
@@ -38,7 +42,8 @@ index = pinecone.Index(index_name)
 
 @app.route('/faq', methods=['POST'])
 def handle_faq():
-    query = request.json.get('query')
+    messages = request.json.get('messages', [])
+    query = create_pinecone_query(messages)
     response = handle_rag_query(query)
     return jsonify(response), 200
 
@@ -48,7 +53,7 @@ def order_info():
     order_id = request.json.get('order_id')
     if order_id:
         order_info = get_order_info(order_id)
-        return jsonify(order_info)
+        return jsonify(order_info), 200
     else:
         return jsonify({'error': 'Order ID is required'}), 400
 
@@ -74,9 +79,18 @@ def embed_query(query):
     return embeddings_model.embed_text(query)
 
 
+def create_pinecone_query(context):
+    context = [{"role": "system", "content": "The following is a message exchange between an AI assistant and a user. Summarize it into a brief query that could be vectorized for Pinecone to find the relevant information for the user's last question. Please ONLY provide the query ready for vectorization."}] + context
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=context
+    )
+    return response.choices[0].message.content
+
+
 def generate_response(query, faq_texts):
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "You are a helpful customer support assistant."},
             {"role": "system", "content": "You should generate a very brief response according to the user questions as well as the FAQ database entries."},
