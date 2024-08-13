@@ -58,7 +58,7 @@ def handle_faq():
 def order_info():
     order_id = request.json.get('order_id')
     if order_id and order_id.isdigit() and len(order_id) == 5:
-        order_response = get_order_info(order_id)
+        order_response = get_order_info(int(order_id))
         if isinstance(order_response, dict) and 'error' in order_response:
             return jsonify(order_response), 404
         return jsonify({'message': order_response}), 200
