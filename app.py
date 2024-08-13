@@ -58,7 +58,7 @@ def handle_faq():
 def order_info():
     order_id = request.json.get('order_id')
     if order_id and order_id.isdigit() and len(order_id) == 5:
-        order_response = get_order_info(int(order_id))
+        order_response = get_order_info(order_id)
         if isinstance(order_response, dict) and 'error' in order_response:
             return jsonify(order_response), 404
         return jsonify({'message': order_response}), 200
@@ -67,7 +67,7 @@ def order_info():
 
 
 def get_order_info(order_id):
-    ref = db.reference('/orders')
+    ref = db.reference('/')
     order_info = ref.child(order_id).get()
     if order_info:
         status = order_info.get('delivery status', 'No status available')
@@ -91,9 +91,14 @@ def handle_rag_query(query):
         return {'error': 'OpenAI API error'}
 
 
-def embed_query(query):
+def embed_query(query, model="text-embedding-3-small"):
     try:
-        return embeddings_model.embed_text(query)
+        query = query.replace("\n", " ")
+        response = client.embeddings.create(
+            input=[query],
+            model=model
+        )
+        return response.data[0].embedding
     except Exception as e:
         print(e)
         raise Exception("OpenAI API error")
