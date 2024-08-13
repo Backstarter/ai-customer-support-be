@@ -81,8 +81,11 @@ def handle_rag_query(query):
     try:
         embeddings = embed_query(query)
         top_k = 5
-        query_results = index.query(embeddings, top_k=top_k)
-        retrieved_texts = [doc['metadata']['text'] for doc in query_results['matches']]
+        query_results = index.query(vector=embeddings, top_k=top_k)
+        print(query_results)
+        match_ids = [record['id'] for record in query_results['matches']]
+        fetched_records = index.fetch(match_ids)
+        retrieved_texts = [fetched_records['vectors'][id]['metadata']['text'] for id in match_ids]
         combined_text = "FAQ database entries: \n" + " ".join(retrieved_texts)
         response = generate_response(query, combined_text)
         return {"message": response}
