@@ -82,7 +82,7 @@ def handle_rag_query(query):
         embeddings = embed_query(query)
         top_k = 5
         query_results = index.query(embeddings, top_k=top_k)
-        retrieved_texts = [doc['text'] for doc in query_results['matches']]
+        retrieved_texts = [doc['metadata']['text'] for doc in query_results['matches']]
         combined_text = "FAQ database entries: \n" + " ".join(retrieved_texts)
         response = generate_response(query, combined_text)
         return {"message": response}
