@@ -39,6 +39,11 @@ if index_name not in pinecone.list_indexes().names():
 index = pinecone.Index(index_name)
 
 
+@app.route('/hello', methods=['POST'])
+def hello():
+    return jsonify({'hello': 'world'}), 200
+
+
 @app.route('/faq', methods=['POST'])
 def handle_faq():
     messages = request.json.get('messages', [])
@@ -129,4 +134,5 @@ def generate_response(query, faq_texts):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
