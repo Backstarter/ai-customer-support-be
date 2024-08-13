@@ -82,7 +82,7 @@ def handle_rag_query(query):
         embeddings = embed_query(query)
         top_k = 5
         query_results = index.query(vector=embeddings, top_k=top_k)
-        print(query_results)
+        # print(query_results)
         match_ids = [record['id'] for record in query_results['matches']]
         fetched_records = index.fetch(match_ids)
         retrieved_texts = [fetched_records['vectors'][id]['metadata']['text'] for id in match_ids]
@@ -111,13 +111,15 @@ def create_pinecone_query(context):
     try:
         context = [{
             "role": "system",
-            "content": "The following is a message exchange between an AI assistant and a user. Summarize it into a brief query that could be vectorized for Pinecone to find the relevant information for the user's last question. Please ONLY provide the query ready for vectorization."
+            "content": "The following is a message exchange between an AI assistant and a user. You need to summarize what the user currently wants to find out in a question based on the context of the exchange. Return ONLY the resulting summarized question."
         }] + context
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=context
         )
-        return response.choices[0].message.content
+        query = response.choices[0].message.content
+        print(query)
+        return query
     except Exception as e:
         print(e)
         raise Exception("OpenAI API error")
@@ -129,8 +131,8 @@ def generate_response(query, faq_texts):
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a helpful customer support assistant."},
-                {"role": "system", "content": "You should generate a very brief response according to the user questions as well as the FAQ database entries."},
-                {"role": "system", "content": "If it is apparent that the user's question is unrelated to FAQ, please briefly prompt the user to only ask related questions."},
+                {"role": "system", "content": "You should generate a brief response according to the user's question as well as the FAQ database entries."},
+                {"role": "system", "content": "If the user's question is completely unrelated to the FAQ (i.e. questions like Who was the first president of the US), briefly prompt the user to ask related questions."},
                 {"role": "system", "content": faq_texts},
                 {"role": "user", "content": query}
             ]
