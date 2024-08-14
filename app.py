@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, db
 import os
@@ -11,6 +12,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 
 app = Flask(__name__)
+CORS(app)
 
 load_dotenv()
 
@@ -48,7 +50,7 @@ def hello():
 def handle_faq():
     messages = request.json.get('messages', [])
     query = create_pinecone_query(messages)
-    response = handle_rag_query(query)
+    response = handle_rag_query(query, messages)
     if isinstance(response, dict) and 'error' in response:
         return jsonify(response), 400
     return jsonify(response), 200
@@ -77,17 +79,20 @@ def get_order_info(order_id):
         return {'error': 'No order found'}
 
 
-def handle_rag_query(query):
+def handle_rag_query(query, messages):
     try:
-        embeddings = embed_query(query)
-        top_k = 5
-        query_results = index.query(vector=embeddings, top_k=top_k)
-        # print(query_results)
-        match_ids = [record['id'] for record in query_results['matches']]
-        fetched_records = index.fetch(match_ids)
-        retrieved_texts = [fetched_records['vectors'][id]['metadata']['text'] for id in match_ids]
-        combined_text = "FAQ database entries: \n" + " ".join(retrieved_texts)
-        response = generate_response(query, combined_text)
+        if query != "NULL":
+            embeddings = embed_query(query)
+            top_k = 5
+            query_results = index.query(vector=embeddings, top_k=top_k)
+            # print(query_results)
+            match_ids = [record['id'] for record in query_results['matches']]
+            fetched_records = index.fetch(match_ids)
+            retrieved_texts = [fetched_records['vectors'][id]['metadata']['text'] for id in match_ids]
+            combined_text = "FAQ database entries: \n" + " ".join(retrieved_texts)
+        else:
+            combined_text = None
+        response = generate_response(combined_text, messages)
         return {"message": response}
     except Exception as e:
         print(e)
@@ -111,7 +116,7 @@ def create_pinecone_query(context):
     try:
         context = [{
             "role": "system",
-            "content": "The following is a message exchange between an AI assistant and a user. You need to summarize what the user currently wants to find out in a question based on the context of the exchange. Return ONLY the resulting summarized question."
+            "content": "Given the message exchange between an AI assistant and a user and thir latest message, summarize what the user currently wants to find out in a question based on the context of the exchange if it could be found in a company's FAQ. Return ONLY the resulting summarized question. If the user's statement is not asking an FAQ-like question ONLY return 'NULL'."
         }] + context
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -125,17 +130,27 @@ def create_pinecone_query(context):
         raise Exception("OpenAI API error")
 
 
-def generate_response(query, faq_texts):
+def generate_response(faq_texts, messages):
+
+    conversation = [
+        {"role": "system", "content": "You are a helpful customer support assistant."},
+        {"role": "system", "content": "You should generate a brief response according to the user's question as well as the FAQ database entries."},
+        {"role": "system", "content": "If the user's question is completely unrelated to the FAQ (i.e. questions like Who was the first president of the US), briefly but politely steer the user to ask related questions instead."},
+        {"role": "system", "content": "If the user asks for their order info ask them for their order id/number."},
+        {"role": "system", "content": "If the user asks for the specific deails of their order, refer them to their order confirmation email."},
+    ]
+    
+    if faq_texts:
+        conversation.append({"role": "system", "content": faq_texts})
+    if messages:
+        conversation.extend(messages)
+
+    print(conversation)
+
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a helpful customer support assistant."},
-                {"role": "system", "content": "You should generate a brief response according to the user's question as well as the FAQ database entries."},
-                {"role": "system", "content": "If the user's question is completely unrelated to the FAQ (i.e. questions like Who was the first president of the US), briefly prompt the user to ask related questions."},
-                {"role": "system", "content": faq_texts},
-                {"role": "user", "content": query}
-            ]
+            messages=conversation
         )
         return response.choices[0].message.content
     except Exception as e:
